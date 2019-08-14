@@ -14,7 +14,7 @@
 (def batch-size 100)
 
 (when-not (.exists (io/file (str data-dir "train-images-idx3-ubyte")))
-  (sh "../../scripts/get_mnist_data.sh"))
+  (sh "./get_mnist_data.sh"))
 
 
 ;;; Load the MNIST datasets
