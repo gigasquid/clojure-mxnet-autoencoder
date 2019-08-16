@@ -17,3 +17,5 @@ data/train-images-idx3-ubyte
 data/train-labels-idx1-ubyte
 results/originals.jpg
 results/preds.jpg
+results/preds-after-training.jpg
+results/preds-before-training.jpg

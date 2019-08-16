@@ -18,19 +18,16 @@
 
 
 ;;; Load the MNIST datasets
-;;; note that the label is the same as the image
 (def train-data (mx-io/mnist-iter {:image (str data-dir "train-images-idx3-ubyte")
                                    :label (str data-dir "train-labels-idx1-ubyte")
-                                        ;:input-shape [1 28 28]
                                    :input-shape [784]
                                    :label-shape [10]
                                    :flat true
                                    :batch-size batch-size
                                    :shuffle true}))
 
-(def test-data (mx-io/mnist-iter {:image (str data-dir "train-images-idx3-ubyte")
-                                  :label (str data-dir "train-labels-idx1-ubyte")
-                                  ;;:input-shape [1 28 28]
+(def test-data (mx-io/mnist-iter {:image (str data-dir "t10k-images-idx3-ubyte")
+                                  :label (str data-dir "t10k-labels-idx1-ubyte")
                                   :input-shape [784]
                                   :batch-size batch-size
                                   :flat true
@@ -95,13 +92,20 @@
   (viz/im-sav {:title "originals" :output-path "results/" :x (ndarray/reshape (first images) [100 1 28 28])})
 
 
-  (train 3)
+ ;;; before training
+ (def my-test-batch (mx-io/next test-data))
+ (def test-images (mx-io/batch-data my-test-batch))
+ (def preds (m/predict-batch model {:data test-images} ))
+ (viz/im-sav {:title "before-training-preds" :output-path "results/" :x (ndarray/reshape (first preds) [100 1 28 28])})
+
+ (train 3)
 
 
-  (def my-test-batch (mx-io/next test-data))
-  (def test-images (mx-io/batch-data my-test-batch))
-  (def preds (m/predict-batch model {:data test-images} ))
-  (viz/im-sav {:title "preds" :output-path "results/" :x (ndarray/reshape (first preds) [100 1 28 28])})
+ ;;; after training
+ (def my-test-batch (mx-io/next test-data))
+ (def test-images (mx-io/batch-data my-test-batch))
+ (def preds (m/predict-batch model {:data test-images} ))
+ (viz/im-sav {:title "after-training-preds" :output-path "results/" :x (ndarray/reshape (first preds) [100 1 28 28])})
 
 
   )
