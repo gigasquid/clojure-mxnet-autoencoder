@@ -20,21 +20,21 @@
 ;;; Load the MNIST datasets
 ;;; note that the label is the same as the image
 (def train-data (mx-io/mnist-iter {:image (str data-dir "train-images-idx3-ubyte")
-                                       :label (str data-dir "train-images-idx3-ubyte")
+                                   :label (str data-dir "train-labels-idx1-ubyte")
                                         ;:input-shape [1 28 28]
-                                        :input-shape [784]
-                                        :label-shape [10]
-                                        :flat true
-                                        :batch-size batch-size
-                                        :shuffle true}))
+                                   :input-shape [784]
+                                   :label-shape [10]
+                                   :flat true
+                                   :batch-size batch-size
+                                   :shuffle true}))
 
 (def test-data (mx-io/mnist-iter {:image (str data-dir "train-images-idx3-ubyte")
-                                       :label (str data-dir "train-images-idx3-ubyte")
-                                       ;;:input-shape [1 28 28]
+                                  :label (str data-dir "train-labels-idx1-ubyte")
+                                  ;;:input-shape [1 28 28]
                                   :input-shape [784]
-                                       :batch-size batch-size
-                                       :flat true
-                                       :shuffle true}))
+                                  :batch-size batch-size
+                                  :flat true
+                                  :shuffle true}))
 (def output (sym/variable "input_"))
 
 (defn get-symbol []
