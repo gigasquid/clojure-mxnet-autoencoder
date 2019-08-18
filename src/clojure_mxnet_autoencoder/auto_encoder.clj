@@ -32,10 +32,12 @@
                                   :batch-size batch-size
                                   :flat true
                                   :shuffle true}))
+
+(def input (sym/variable "input"))
 (def output (sym/variable "input_"))
 
 (defn get-symbol []
-  (as-> (sym/variable "input") data
+  (as-> input data
     ;; encode
     (sym/fully-connected "encode1" {:data data :num-hidden 100})
     (sym/activation "sigmoid1" {:data data :act-type "sigmoid"})
@@ -83,9 +85,6 @@
 
 (comment
 
-  (mx-io/provide-data train-data)
-  (mx-io/provide-label train-data)
-  (mx-io/reset train-data)
   (def my-batch (mx-io/next train-data))
   (def images (mx-io/batch-data my-batch))
   (ndarray/shape (ndarray/reshape (first images) [100 1 28 28]))

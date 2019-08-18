@@ -19,3 +19,5 @@ results/originals.jpg
 results/preds.jpg
 results/preds-after-training.jpg
 results/preds-before-training.jpg
+results/after-training-preds.jpg
+results/before-training-preds.jpg
