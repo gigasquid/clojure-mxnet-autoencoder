@@ -21,7 +21,6 @@
 (def train-data (mx-io/mnist-iter {:image (str data-dir "train-images-idx3-ubyte")
                                    :label (str data-dir "train-labels-idx1-ubyte")
                                    :input-shape [784]
-                                   :label-shape [10]
                                    :flat true
                                    :batch-size batch-size
                                    :shuffle true}))
