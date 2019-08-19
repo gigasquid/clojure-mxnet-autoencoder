@@ -21,3 +21,10 @@ results/preds-after-training.jpg
 results/preds-before-training.jpg
 results/after-training-preds.jpg
 results/before-training-preds.jpg
+model/discriminator-0002.params
+model/discriminator-symbol.json
+model/generator-0002.params
+model/generator-symbol.json
+results/generated-image.jpg
+results/generated-images.jpg
+results/test-discriminator-images.jpg
