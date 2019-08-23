@@ -4,17 +4,19 @@
             [clojure.java.io :as io]
             [clojure.java.shell :refer [sh]]
             [org.apache.clojure-mxnet.ndarray :as ndarray]
+            [org.apache.clojure-mxnet.ndarray :as ndarray-api]
             [org.apache.clojure-mxnet.layout :as layout]
             [org.apache.clojure-mxnet.io :as mx-io]
             [org.apache.clojure-mxnet.module :as m]
             [clojure-mxnet-autoencoder.viz :as viz]
             [org.apache.clojure-mxnet.initializer :as initializer]
             [org.apache.clojure-mxnet.optimizer :as optimizer]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]))
 
 (def data-dir "data/")
 ;;; just deal with single numbers here
-(def batch-size 100)
+(def batch-size 1)
 
 (when-not (.exists (io/file (str data-dir "train-images-idx3-ubyte")))
   (sh "./get_mnist_data.sh"))
@@ -50,51 +52,75 @@
                :label-shapes [(assoc data-desc :name "input_")]})
       (m/init-params {:initializer  (initializer/uniform 1)})))
 
-(defn discriminate [images]
+(defn discriminate [image]
   (-> (m/forward discriminator-model {:data [image]})
       (m/outputs)
       (ffirst)
       (ndarray/argmax-channel)
-      (ndarray/->vec)))
+      (ndarray/->vec)
+      (first)
+      (int)))
 
-(defn generate [labels]
-  (-> (m/forward generator-model {:data [(ndarray/array labels [batch-size])]})
+(defn generate [label]
+  (-> (m/forward generator-model {:data [(ndarray/array [label] [batch-size])]})
       (m/outputs)
       (ffirst)))
 
 
 (comment 
   (def my-test-batch (mx-io/next test-data))
-  (def my-test-images (first (mx-io/batch-data my-test-batch)))
-  (ndarray/shape my-test-images)
-  (viz/im-sav {:title "test-discriminator-images" :output-path "results/" :x (ndarray/reshape my-test-images [batch-size 1 28 28])})
+  (def my-test-image (first (mx-io/batch-data my-test-batch)))
+  (ndarray/shape my-test-image)
+  (viz/im-sav {:title "test-discriminator-image" :output-path "results/" :x (ndarray/reshape my-test-image [batch-size 1 28 28])})
 
-  (discriminate my-test-images)
-  (def generated-test-images (generate (repeatedly 100 #(rand-int 9))))
-  (viz/im-sav {:title "generated-images" :output-path "results/" :x (ndarray/reshape generated-test-images [batch-size 1 28 28])})
+  (discriminate my-test-image) ;=> 6
+  (def generated-test-image (generate 3))
+  (viz/im-sav {:title "generated-image" :output-path "results/" :x (ndarray/reshape generated-test-image [batch-size 1 28 28])})
 
+  (s/def ::mnist-number (s/and int? #(<= 0 % 9)))
+  (def x (gen/fmap #(do (generate %))
+                   (s/gen ::mnist-number)))
+  (def gen-images (->> (gen/sample x)
+                       (map ndarray/copy)))
+  (doall (map discriminate gen-images))
 
-
+  (doall (map-indexed (fn [i image]
+                        (viz/im-sav {:title (str "result-image-" i)
+                                     :output-path "results/"
+                                     :x (ndarray/reshape image [batch-size 1 28 28])}))
+                      gen-images))
   
-  
-  (discriminate my-test-image) ;=> 6.0
+  (def y (apply ndarray/stack gen-images))
+  (ndarray/shape y)
+  (viz/im-sav {:title "generated-image-stack" :output-path "results/" :x (ndarray/reshape y [10 1 28 28])})
+
+  ;;;;;;;;;
+  (s/def ::mnist-number (s/and int? #(<= 0 % 9)))
+
+  (gen/sample (s/gen ::mnist-number)) ;=> (0 1 0 3 5 3 7 5 0 1)
 
 
-  (s/def ::even-image #(-> (discriminate %)
-                           (int)
-                           (even?)))
+  (s/def ::mnist-image
+    (s/with-gen
+      #(<= 0 (discriminate %) 9)
+      #(gen/fmap (fn [n]
+                   (do (ndarray/copy (generate n))))
+                 (s/gen ::mnist-number))))
 
-  (s/valid? ::even-image my-test-image) ;=> true
+  (def gen-images (gen/sample (s/gen ::mnist-image)))
+  (mapv discriminate gen-images) ;=>  [3 3 0 0 1 8 1 9 0 0]
+  (viz/im-sav {:title "generated-mnist-images"
+               :output-path "results/"
+               :x (-> (apply ndarray/stack gen-images)
+                      (ndarray/reshape [10 1 28 28]))})
 
-  (s/def ::odd-image #(-> (discriminate %)
-                          (int)
-                          (odd?)))
-  (s/valid? ::odd-image my-test-image) ;=> false
+
+  (s/valid? ::mnist-image my-test-image)
+
+  ;;;;;;; events
 
 
-  (def my-test-label (first (mx-io/batch-label my-test-batch)))
   )
 
-   
 
 

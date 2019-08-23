@@ -4,4 +4,5 @@
   :repositories [["vendredi" {:url "https://repository.hellonico.info/repository/hellonico/"}]]
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.apache.mxnet.contrib.clojure/clojure-mxnet-osx-cpu "1.5.0"]
-                 [origami "4.0.0-3"]])
+                 [origami "4.0.0-3"]
+                 [org.clojure/test.check "0.9.0"]])
