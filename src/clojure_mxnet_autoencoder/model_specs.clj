@@ -102,7 +102,7 @@
 
   (s/def ::mnist-image
     (s/with-gen
-      #(<= 0 (discriminate %) 9)
+      #(s/valid? ::mnist-number (discriminate %))
       #(gen/fmap (fn [n]
                    (do (ndarray/copy (generate n))))
                  (s/gen ::mnist-number))))
@@ -115,9 +115,39 @@
                       (ndarray/reshape [10 1 28 28]))})
 
 
-  (s/valid? ::mnist-image my-test-image)
+  (s/valid? ::mnist-image my-test-image) ;=> true
+  (s/conform ::mnist-image my-test-image)
 
-  ;;;;;;; events
+  ;;;; macro
+
+  (defmacro def-model-spec [spec-key spec discriminate-fn generate-fn]
+    `(s/def ~spec-key
+       (s/with-gen
+         #(s/valid? ~spec (~discriminate-fn %))
+         #(gen/fmap (fn [n#]
+                      (do (ndarray/copy (~generate-fn n#))))
+                    (s/gen ~spec)))))
+
+  (macroexpand-1 `(def-model-spec
+                    ::mnist-image2
+                    ::mnist-number
+                    discriminate
+                    generate ))
+  (def-model-spec ::mnist-image2 ::mnist-number discriminate generate)
+
+  (s/valid? ::mnist-image2 my-test-image)
+  (def gen-images2 (gen/sample (s/gen ::mnist-image2)))
+  (viz/im-sav {:title "generated-mnist-images2"
+               :output-path "results/"
+               :x (-> (apply ndarray/stack gen-images2)
+                      (ndarray/reshape [10 1 28 28]))})
+  
+
+  ;;;;;;; evens
+
+
+
+
 
 
   )
