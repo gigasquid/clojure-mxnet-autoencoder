@@ -18,7 +18,7 @@
 
 
 ;;; Load the MNIST datasets
-(defonce
+(def
   train-data
   (mx-io/mnist-iter {:image (str data-dir "train-images-idx3-ubyte")
                      :label (str data-dir "train-labels-idx1-ubyte")
@@ -27,7 +27,7 @@
                      :batch-size batch-size
                      :shuffle true}))
 
-(defonce
+(def
   test-data (mx-io/mnist-iter
              {:image (str data-dir "t10k-images-idx3-ubyte")
               :label (str data-dir "t10k-labels-idx1-ubyte")
@@ -109,15 +109,20 @@
 
   (train 3)
 
+  ;; starting epoch  0
+  ;; result for epoch  0  is  [mse 0.07240954]
+  ;; starting epoch  1
+  ;; result for epoch  1  is  [mse 0.055018898]
+  ;; starting epoch  2
+  ;; result for epoch  2  is  [mse 0.053410158]
 
  ;;; after training
   (def my-test-batch (mx-io/next test-data))
   (def test-labels (mx-io/batch-label my-test-batch))
-  (def preds (m/predict-batch model {:data test-labels} ))
+  (def preds (m/predict-batch model {:data test-labels}))
   (viz/im-sav {:title "after-training-preds" :output-path "results/" :x (ndarray/reshape (first preds) [100 1 28 28])})
   (->> test-labels first ndarray/->vec (take 10))
-                                        ;=> (7.0 5.0 7.0 7.0 3.0 9.0 7.0 4.0 7.0 7.0)
-
+  ;=> (7.0 5.0 7.0 7.0 3.0 9.0 7.0 4.0 7.0 7.0)
 
   ;;; save model
   (m/save-checkpoint model {:prefix "model/generator" :epoch 2})
