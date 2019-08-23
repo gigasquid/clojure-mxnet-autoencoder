@@ -19,7 +19,7 @@
 
 
 ;;; Load the MNIST datasets
-(defonce
+(def
   train-data
   (mx-io/mnist-iter {:image (str data-dir "train-images-idx3-ubyte")
                      :label (str data-dir "train-labels-idx1-ubyte")
@@ -28,7 +28,7 @@
                      :batch-size batch-size
                      :shuffle true}))
 
-(defonce
+(def
   test-data
   (mx-io/mnist-iter {:image (str data-dir "t10k-images-idx3-ubyte")
                      :label (str data-dir "t10k-labels-idx1-ubyte")
@@ -49,14 +49,6 @@
     ;; encode
     (sym/fully-connected "encode2" {:data data :num-hidden 50})
     (sym/activation "sigmoid2" {:data data :act-type "sigmoid"})
-
-    ;; decode
-    (sym/fully-connected "decode1" {:data data :num-hidden 50})
-    (sym/activation "sigmoid3" {:data data :act-type "sigmoid"})
-
-    ;; decode
-    (sym/fully-connected "decode2" {:data data :num-hidden 100})
-    (sym/activation "sigmoid4" {:data data :act-type "sigmoid"})
 
     ;;; this last bit changed from autoencoder
     ;;output
@@ -99,29 +91,37 @@
 
 
  ;;; before training
- (def my-test-batch (mx-io/next test-data))
- (def test-images (mx-io/batch-data my-test-batch))
- (viz/im-sav {:title "test-images" :output-path "results/" :x (ndarray/reshape (first test-images) [100 1 28 28])})
- (def preds (m/predict-batch model {:data test-images} ))
+  (def my-test-batch (mx-io/next test-data))
+  (def test-images (mx-io/batch-data my-test-batch))
+  (viz/im-sav {:title "test-images" :output-path "results/" :x (ndarray/reshape (first test-images) [100 1 28 28])})
+  (def preds (m/predict-batch model {:data test-images} ))
   (->> preds
-      first
-      (ndarray/argmax-channel)
-      (ndarray/->vec)
-      (take 10))
- ;=> (4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0)
+       first
+       (ndarray/argmax-channel)
+       (ndarray/->vec)
+       (take 10))
+ ;=> (1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0)
 
+  (train 3)
 
- (train 3)
+;; starting epoch  0
+;; result for epoch  0  is  [accuracy 0.8178333]
+;; starting epoch  1
+;; result for epoch  1  is  [accuracy 0.93405]
+;; starting epoch  2
+;; result for epoch  2  is  [accuracy 0.9528]
+
 
 
  ;;; after training
- (def preds (m/predict-batch model {:data test-images} ))
- (->> preds
-      first
-      (ndarray/argmax-channel)
-      (ndarray/->vec)
-      (take 10))
-;=>  (7.0 5.0 7.0 7.0 3.0 9.0 7.0 4.0 1.0 7.0)
+  (def preds (m/predict-batch model {:data test-images} ))
+  (->> preds
+       first
+       (ndarray/argmax-channel)
+       (ndarray/->vec)
+       (take 10))
+
+ ;=>  (7.0 5.0 7.0 7.0 3.0 9.0 7.0 4.0 1.0 7.0)
 
 
   ;;; save model
