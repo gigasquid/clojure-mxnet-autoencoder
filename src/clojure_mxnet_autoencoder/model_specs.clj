@@ -66,6 +66,14 @@
       (m/outputs)
       (ffirst)))
 
+(defmacro def-model-spec [spec-key spec discriminate-fn generate-fn]
+    `(s/def ~spec-key
+       (s/with-gen
+         #(s/valid? ~spec (~discriminate-fn %))
+         #(gen/fmap (fn [n#]
+                      (do (ndarray/copy (~generate-fn n#))))
+                    (s/gen ~spec)))))
+
 
 (comment 
   (def my-test-batch (mx-io/next test-data))
@@ -117,33 +125,53 @@
 
   (s/valid? ::mnist-image my-test-image) ;=> true
   (s/conform ::mnist-image my-test-image)
-
-  ;;;; macro
-
-  (defmacro def-model-spec [spec-key spec discriminate-fn generate-fn]
-    `(s/def ~spec-key
-       (s/with-gen
-         #(s/valid? ~spec (~discriminate-fn %))
-         #(gen/fmap (fn [n#]
-                      (do (ndarray/copy (~generate-fn n#))))
-                    (s/gen ~spec)))))
-
-  (macroexpand-1 `(def-model-spec
-                    ::mnist-image2
-                    ::mnist-number
-                    discriminate
-                    generate ))
-  (def-model-spec ::mnist-image2 ::mnist-number discriminate generate)
-
-  (s/valid? ::mnist-image2 my-test-image)
-  (def gen-images2 (gen/sample (s/gen ::mnist-image2)))
-  (viz/im-sav {:title "generated-mnist-images2"
-               :output-path "results/"
-               :x (-> (apply ndarray/stack gen-images2)
-                      (ndarray/reshape [10 1 28 28]))})
-  
+ 
 
   ;;;;;;; evens
+
+  (def-model-spec ::even-mnist-image
+    (s/and ::mnist-number even?)
+    discriminate
+    generate)
+
+  (s/valid? ::even-mnist-image my-test-image)
+  (def gen-images (gen/sample (s/gen ::even-mnist-image)))
+  (mapv discriminate gen-images)
+  (viz/im-sav {:title "generated-mnist-even-images"
+               :output-path "results/"
+               :x (-> (apply ndarray/stack gen-images)
+                      (ndarray/reshape [10 1 28 28]))})
+
+   ;;;;;;; odds
+
+  (def-model-spec ::odd-mnist-image
+    (s/and ::mnist-number odd?)
+    discriminate
+    generate)
+
+  (s/valid? ::odd-mnist-image my-test-image) ;=> false
+  (def gen-images (gen/sample (s/gen ::odd-mnist-image)))
+  (map discriminate gen-images) ;=> (3 1 1 7 1 1 1 3 1 1)
+  (viz/im-sav {:title "generated-mnist-odd-images"
+               :output-path "results/"
+               :x (-> (apply ndarray/stack gen-images)
+                      (ndarray/reshape [10 1 28 28]))})
+
+  ;;; odd and over 4
+
+  (def-model-spec ::odd-over-2-mnist-image
+    (s/and ::mnist-number odd? #(> % 2))
+    discriminate
+    generate)
+
+  (s/valid? ::odd-over-4-mnist-image my-test-image) ;=> false
+  (def gen-images (gen/sample (s/gen ::odd-over-2-mnist-image)))
+  (map discriminate gen-images) ;=> (9 3 3 9 7 9 3 3 9 3)
+  (viz/im-sav {:title "generated-mnist-odd-over-2-images"
+               :output-path "results/"
+               :x (-> (apply ndarray/stack gen-images)
+                      (ndarray/reshape [10 1 28 28]))})
+
 
 
 
