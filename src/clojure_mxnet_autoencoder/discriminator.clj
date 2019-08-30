@@ -19,23 +19,23 @@
 
 
 ;;; Load the MNIST datasets
-(def
-  train-data
-  (mx-io/mnist-iter {:image (str data-dir "train-images-idx3-ubyte")
-                     :label (str data-dir "train-labels-idx1-ubyte")
-                     :input-shape [784]
-                     :flat true
-                     :batch-size batch-size
-                     :shuffle true}))
+(def train-data
+  (mx-io/mnist-iter
+   {:image (str data-dir "train-images-idx3-ubyte")
+    :label (str data-dir "train-labels-idx1-ubyte")
+    :input-shape [784]
+    :flat true
+    :batch-size batch-size
+    :shuffle true}))
 
-(def
-  test-data
-  (mx-io/mnist-iter {:image (str data-dir "t10k-images-idx3-ubyte")
-                     :label (str data-dir "t10k-labels-idx1-ubyte")
-                     :input-shape [784]
-                     :batch-size batch-size
-                     :flat true
-                     :shuffle true}))
+(def test-data
+  (mx-io/mnist-iter
+   {:image (str data-dir "t10k-images-idx3-ubyte")
+    :label (str data-dir "t10k-labels-idx1-ubyte")
+    :input-shape [784]
+    :batch-size batch-size
+    :flat true
+    :shuffle true}))
 
 (def input (sym/variable "input"))
 (def output (sym/variable "input_"))
@@ -75,41 +75,54 @@
     (mx-io/do-batches
      train-data
      (fn [batch]
-       ;;; here we make sure to use the label now for forward and update-metric
+       ;;; here we make sure to use the label
+       ;;; now for forward and update-metric
        (-> model
-           (m/forward {:data (mx-io/batch-data batch) :label (mx-io/batch-label batch)})
+           (m/forward {:data (mx-io/batch-data batch)
+                       :label (mx-io/batch-label batch)})
            (m/update-metric my-metric (mx-io/batch-label batch))
            (m/backward)
            (m/update))))
-    (println "result for epoch " epoch-num " is " (eval-metric/get-and-reset my-metric))))
+    (println {:epoch epoch-num
+              :metric (eval-metric/get-and-reset my-metric)})))
 
 (comment
 
   (def my-batch (mx-io/next train-data))
   (def images (mx-io/batch-data my-batch))
-  (viz/im-sav {:title "originals" :output-path "results/" :x (ndarray/reshape (first images) [100 1 28 28])})
+  (viz/im-sav {:title "originals"
+               :output-path "results/"
+               :x (-> images
+                      first
+                      (ndarray/reshape [100 1 28 28]))})
 
 
  ;;; before training
   (def my-test-batch (mx-io/next test-data))
   (def test-images (mx-io/batch-data my-test-batch))
-  (viz/im-sav {:title "test-images" :output-path "results/" :x (ndarray/reshape (first test-images) [100 1 28 28])})
+  (viz/im-sav {:title "test-images"
+               :output-path "results/"
+               :x (-> test-images
+                      first
+                      (ndarray/reshape [100 1 28 28]))})
+  
   (def preds (m/predict-batch model {:data test-images} ))
   (->> preds
        first
        (ndarray/argmax-channel)
        (ndarray/->vec)
        (take 10))
- ;=> (1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0)
+ ;=> (1.0 8.0 8.0 8.0 8.0 8.0 2.0 8.0 8.0 1.0)
+
 
   (train 3)
 
 ;; starting epoch  0
-;; result for epoch  0  is  [accuracy 0.8178333]
+;; {:epoch 0, :metric [accuracy 0.83295]}
 ;; starting epoch  1
-;; result for epoch  1  is  [accuracy 0.93405]
+;; {:epoch 1, :metric [accuracy 0.9371333]}
 ;; starting epoch  2
-;; result for epoch  2  is  [accuracy 0.9528]
+;; {:epoch 2, :metric [accuracy 0.9547667]}
 
 
 
@@ -120,12 +133,13 @@
        (ndarray/argmax-channel)
        (ndarray/->vec)
        (take 10))
+ ;=> (6.0 1.0 0.0 0.0 3.0 1.0 4.0 8.0 0.0 9.0)
 
- ;=>  (7.0 5.0 7.0 7.0 3.0 9.0 7.0 4.0 1.0 7.0)
 
 
   ;;; save model
-  (m/save-checkpoint model {:prefix "model/discriminator" :epoch 2})
+  (m/save-checkpoint model {:prefix "model/discriminator"
+                            :epoch 2})
 
 
   )

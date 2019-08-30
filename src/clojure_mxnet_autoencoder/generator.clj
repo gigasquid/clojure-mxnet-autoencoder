@@ -128,6 +128,10 @@
   (m/save-checkpoint model {:prefix "model/generator" :epoch 2})
 
 
+  
   )
+
+
+
 
 
