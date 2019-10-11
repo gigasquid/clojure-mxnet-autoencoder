@@ -7,7 +7,7 @@
             [org.apache.clojure-mxnet.initializer :as initializer]
             [org.apache.clojure-mxnet.io :as mx-io]
             [org.apache.clojure-mxnet.module :as m]
-            [org.apache.clojure-mxnet.ndarray :as ndarray-api]))
+            [org.apache.clojure-mxnet.ndarray :as ndarray]))
 
 (def data-dir "data/")
 ;;; just deal with single numbers here
