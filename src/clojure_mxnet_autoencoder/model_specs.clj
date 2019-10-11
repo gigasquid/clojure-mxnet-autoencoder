@@ -16,7 +16,7 @@
 (when-not (.exists (io/file (str data-dir "train-images-idx3-ubyte")))
   (sh "./get_mnist_data.sh"))
 
-(def
+(defonce
   test-data
   (mx-io/mnist-iter {:image (str data-dir "t10k-images-idx3-ubyte")
                      :label (str data-dir "t10k-labels-idx1-ubyte")
@@ -97,6 +97,7 @@
   (gen/sample (s/gen ::mnist-number)) ;=> (0 1 0 3 5 3 7 5 0 1)
 
 
+
   (s/def ::mnist-image
     (s/with-gen
       #(s/valid? ::mnist-number (discriminate %))
@@ -109,9 +110,9 @@
 
 
   (test-model-spec ::mnist-image my-test-image)
-  ;; {:spec "mnist-image",
-  ;;  :valid? true,
-  ;;  :sample-values [0 0 0 0 2 7 0 1 0 1]}
+  ;; {:spec "mnist-image"
+  ;;  :valid? true
+  ;;  :sample-values [0 0 0 1 3 1 0 2 7 3]}
 
 
   ;;;;;;; evens
@@ -123,9 +124,10 @@
 
   (test-model-spec ::even-mnist-image my-test-image)
 
-  ;; {:spec "even-mnist-image",
-  ;;  :valid? true,
-  ;;  :sample-values [0 0 2 0 0 0 2 0 0 8]}
+  ;; {:spec "even-mnist-image"
+  ;;  :valid? true
+  ;;  :sample-values [0 0 2 0 8 2 2 2 0 0]}
+  
 
    ;;;;;;; odds
 
@@ -136,12 +138,12 @@
 
   (test-model-spec ::odd-mnist-image my-test-image)
 
-  ;; {:spec "odd-mnist-image",
-  ;;  :valid? false,
-  ;;  :sample-values [1 1 1 3 9 7 3 1 1 3]}
+  ;; {:spec "odd-mnist-image"
+  ;;  :valid? false
+  ;;  :sample-values [5 1 5 1 3 3 3 1 1 1]}
 
 
-  ;;; odd and over 4
+  ;;; odd and over 2
 
   (def-model-spec ::odd-over-2-mnist-image
     (s/and ::mnist-number odd? #(> % 2))
@@ -150,10 +152,9 @@
 
   (test-model-spec ::odd-over-2-mnist-image my-test-image)
 
-  ;; {:spec "odd-over-2-mnist-image",
-  ;;  :valid? false,
-  ;;  :sample-values [3 3 3 3 3 9 3 3 3 7]}
-
+  ;; {:spec "odd-over-2-mnist-image"
+  ;;  :valid? false
+  ;;  :sample-values [3 3 3 5 3 5 7 7 7 3]}
 
   )
 
